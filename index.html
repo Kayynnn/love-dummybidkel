@@ -158,49 +158,45 @@
     }
   });
 
-  // 👇 PERUBAHAN DI SINI: Fungsi submitData()
-  async function submitData(){
+  async function submitData() {
     const submitBtn = document.getElementById('submit-btn');
     const jenis = document.getElementById("jenis").value;
     
     if (!jenis) {
-        alert("Silakan pilih Jenis Data terlebih dahulu.");
-        return;
+      alert("Silakan pilih Jenis Data terlebih dahulu.");
+      return;
     }
-
+  
     submitBtn.disabled = true;
     submitBtn.textContent = "Mengirim...";
-
-    const payload = {
-      sheet: jenis,
-      data: {}
+  
+    // 1. Create a data object to hold all form values
+    const dataToSend = {
+      sheet: jenis // Add the sheet name as a parameter
     };
-
-    // Logika baru untuk mengambil data, lebih sederhana
-    // Dia akan mencari semua elemen yang punya ID dan Label
-    const allLabeledInputs = dataForm.querySelectorAll("input[id], select[id], textarea[id]");
     
+    const allLabeledInputs = dataForm.querySelectorAll("input[id], select[id], textarea[id]");
     allLabeledInputs.forEach(el => {
-      // Untuk timestamp, kita tidak pakai label, jadi kita beri nama kolom manual
       if (el.id === 'timestamp') {
-          payload.data['Timestamp'] = el.value;
+        dataToSend['Timestamp'] = el.value;
       } else {
-          const label = dataForm.querySelector(`label[for='${el.id}']`);
-          if (label) {
-            const columnName = label.textContent;
-            payload.data[columnName] = el.value;
-          }
+        const label = dataForm.querySelector(`label[for='${el.id}']`);
+        if (label && el.value) { // Only add fields that have a value
+          const columnName = label.textContent;
+          dataToSend[columnName] = el.value;
+        }
       }
     });
-
+  
+    // 2. Build the URL with query parameters
+    const params = new URLSearchParams(dataToSend);
+    const finalURL = SCRIPT_URL + "?" + params.toString();
+  
+    // 3. Send the GET request using fetch
     try {
-      const response = await fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" }
-      });
+      const response = await fetch(finalURL); // No method or body needed for GET
       const result = await response.json();
-
+  
       if (result.status === "success") {
         alert(result.message);
         formContainer.style.display = "none";
@@ -215,11 +211,12 @@
       submitBtn.disabled = false;
       submitBtn.textContent = "Kirim Data";
     }
-  }
+}
   // 👆 AKHIR PERUBAHAN
 </script>
 </body>
 </html>
+
 
 
 
